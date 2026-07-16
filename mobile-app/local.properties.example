@@ -1,0 +1,13 @@
+# Copy to `local.properties` and fill in your own values.
+# `local.properties` is git-ignored and must never be committed.
+
+# Android SDK location on your machine
+sdk.dir=/Users/you/Library/Android/sdk
+
+# DJI Mobile SDK v5 key — register the app at https://developer.dji.com
+# The key is bound to the applicationId (com.djidrone.app), so change both together.
+DJI_API_KEY=your_dji_sdk_key_here
+
+# Google Maps SDK for Android key — https://console.cloud.google.com
+# Restrict it to your package name + signing SHA-1, otherwise anyone can bill your account.
+MAPS_API_KEY=your_google_maps_key_here

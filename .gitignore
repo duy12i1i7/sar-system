@@ -1,0 +1,42 @@
+# --- Secrets: never commit ---
+local.properties
+*.env
+.env
+
+# --- Android ---
+build/
+.gradle/
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# --- Node / dashboard ---
+node_modules/
+dist/
+.vite/
+*.log
+
+# --- Python / detector ---
+__pycache__/
+*.pyc
+detector-env/
+venv/
+*.pt          # YOLO weights: downloaded on first run
+
+# --- MediaMTX ---
+recordings/
+mediamtx           # binary
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Working backups (not part of the project) ---
+*.bak
+*.bak2
+*.mine
+*.safe
+*.keep
+*.pre*

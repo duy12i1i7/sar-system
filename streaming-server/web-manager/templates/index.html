@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone Stream Manager</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --border-color: #dee2e6;
+            --card-bg: #ffffff;
+            --btn-bg: #e9ecef;
+            --btn-hover: #ced4da;
+            --accent: #495057;
+            --danger: #dc3545;
+            --danger-hover: #c82333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-weight: 300;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--accent);
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .add-stream-form {
+            display: flex;
+            gap: 1rem;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: 1px solid var(--border-color);
+            background-color: var(--btn-bg);
+            color: var(--text-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--btn-hover);
+        }
+
+        button.danger {
+            background-color: #fff;
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        button.danger:hover {
+            background-color: var(--danger);
+            color: #fff;
+        }
+        
+        button.primary {
+            background-color: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        
+        button.primary:hover {
+            background-color: #343a40;
+        }
+
+        .stream-list {
+            list-style: none;
+        }
+
+        .stream-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stream-item:last-child {
+            border-bottom: none;
+        }
+
+        .stream-info h3 {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .stream-details {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .stream-details code {
+            background-color: #f1f3f5;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            color: var(--accent);
+        }
+
+        .stream-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #6c757d;
+            padding: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1 style="margin-bottom: 0;">Drone Stream Manager</h1>
+            <button class="danger" onclick="shutdownPi()" style="padding: 0.5rem 1rem;">Tắt máy Pi</button>
+        </div>
+        
+        <div class="card">
+            <form id="addStreamForm" class="add-stream-form">
+                <input type="text" id="streamName" placeholder="Tên luồng (VD: drone-1)" required pattern="[a-zA-Z0-9_-]+">
+                <button type="submit" class="primary">Thêm Luồng</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <ul class="stream-list" id="streamList">
+                <li class="empty-state">Đang tải danh sách luồng...</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const hostIp = window.location.hostname;
+        
+        async function shutdownPi() {
+            if (!confirm("Bạn có chắc chắn muốn TẮT NGUỒN Raspberry Pi không? Hệ thống sẽ dừng hoạt động cho đến khi bạn rút điện cắm lại.")) {
+                return;
+            }
+            try {
+                const response = await fetch('/api/shutdown', { method: 'POST' });
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(data.message);
+                    document.body.innerHTML = '<h2 style="text-align: center; margin-top: 5rem; color: #dc3545;">Raspberry Pi đang tắt nguồn... Bạn có thể đóng trang này.</h2>';
+                } else {
+                    alert('Không thể gọi lệnh tắt máy.');
+                }
+            } catch (error) {
+                alert('Có lỗi xảy ra khi gọi API tắt máy.');
+            }
+        }
+
+        async function fetchStreams() {
+            try {
+                const response = await fetch('/api/streams');
+                const data = await response.json();
+                const items = data.items || [];
+                
+                const streamList = document.getElementById('streamList');
+                streamList.innerHTML = '';
+                
+                if (items.length === 0) {
+                    streamList.innerHTML = '<li class="empty-state">Chưa có luồng nào được cấu hình.</li>';
+                    return;
+                }
+                
+                items.forEach(item => {
+                    const name = item.name;
+                    // Skip internal / default paths if they exist
+                    if (name === 'all') return;
+                    
+                    const li = document.createElement('li');
+                    li.className = 'stream-item';
+                    
+                    li.innerHTML = `
+                        <div class="stream-info">
+                            <h3>${name}</h3>
+                            <div class="stream-details">
+                                <p><strong>RTMP Publish:</strong> <code>rtmp://${hostIp}/${name}</code></p>
+                                <p><strong>RTSP Publish:</strong> <code>rtsp://${hostIp}:8554/${name}</code></p>
+                            </div>
+                        </div>
+                        <div class="stream-actions">
+                            <button onclick="window.open('http://${hostIp}:8889/${name}/', '_blank')">Xem WebRTC</button>
+                            <button class="danger" onclick="deleteStream('${name}')">Xóa</button>
+                        </div>
+                    `;
+                    streamList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("Error fetching streams:", error);
+            }
+        }
+
+        async function addStream(event) {
+            event.preventDefault();
+            const nameInput = document.getElementById('streamName');
+            const name = nameInput.value.trim();
+            
+            if (!name) return;
+            
+            try {
+                const response = await fetch('/api/streams', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                
+                if (response.ok) {
+                    nameInput.value = '';
+                    fetchStreams();
+                } else {
+                    const err = await response.json();
+                    alert('Lỗi: ' + err.error);
+                }
+            } catch (error) {
+                alert('Có lỗi xảy ra khi thêm luồng.');
+            }
+        }
+
+        async function deleteStream(name) {
+            if (!confirm(`Bạn có chắc muốn xóa luồng ${name}?`)) return;
+            
+            try {
+                const response = await fetch(`/api/streams/${name}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    fetchStreams();
+                } else {
+                    const err = await response.json();
+                    alert('Lỗi: ' + err.error);
+                }
+            } catch (error) {
+                alert('Có lỗi xảy ra khi xóa luồng.');
+            }
+        }
+
+        document.getElementById('addStreamForm').addEventListener('submit', addStream);
+        
+        // Initial load
+        fetchStreams();
+        // Refresh every 10 seconds
+        setInterval(fetchStreams, 10000);
+    </script>
+</body>
+</html>

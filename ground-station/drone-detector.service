@@ -1,0 +1,19 @@
+[Unit]
+# YOLO26 cho panel AI DETECTION cua dashboard.
+# Doc RTSP tu MediaMTX tren Pi -> ve khung -> MJPEG :8091 + nhan qua MQTT.
+# Dung systemd chu khong nhet vao start_dashboard.sh: detector khong can man hinh,
+# va de bat/tat/xem log rieng ma khong dung toi kiosk.
+Description=Drone AI detector (YOLO26)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu
+ExecStart=/home/ubuntu/run_detector.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

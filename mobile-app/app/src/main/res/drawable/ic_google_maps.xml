@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icon kiểu Google Maps cho trạng thái map thu gọn (giống DJI Fly) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Nền trắng bo góc -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M8,2 L40,2 A6,6 0 0 1 46,8 L46,40 A6,6 0 0 1 40,46 L8,46 A6,6 0 0 1 2,40 L2,8 A6,6 0 0 1 8,2 Z" />
+
+    <!-- Mảng xanh lá (khu vực) -->
+    <path
+        android:fillColor="#FF34A853"
+        android:pathData="M2,30 L18,30 L10,46 L8,46 A6,6 0 0 1 2,40 Z" />
+
+    <!-- Mảng vàng (đường) -->
+    <path
+        android:fillColor="#FFFBBC05"
+        android:pathData="M2,8 A6,6 0 0 1 8,2 L16,2 L2,24 Z" />
+
+    <!-- Con đường xanh dương chéo -->
+    <path
+        android:fillColor="#FF4285F4"
+        android:pathData="M30,2 L40,2 A6,6 0 0 1 46,8 L46,20 L18,46 L6,46 Z"
+        android:fillAlpha="0.18" />
+
+    <!-- Ghim định vị đỏ (Google Maps) -->
+    <path
+        android:fillColor="#FFEA4335"
+        android:pathData="M30,10 C25.03,10 21,14.03 21,19 C21,25.75 30,38 30,38 C30,38 39,25.75 39,19 C39,14.03 34.97,10 30,10 Z" />
+    <!-- Lỗ trắng của ghim -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M30,15.5 A3.5,3.5 0 1 0 30,22.5 A3.5,3.5 0 1 0 30,15.5 Z" />
+</vector>

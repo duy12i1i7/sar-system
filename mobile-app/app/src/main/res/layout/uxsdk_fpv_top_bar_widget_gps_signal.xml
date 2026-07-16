@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Override widget GPS ở top bar.
+  Mục tiêu: LUÔN hiển thị icon vệ tinh + số lượng vệ tinh (giống DJI Fly),
+  KHÔNG hiện icon "RTK".
+  Code SDK tự set iv_rtk_icon.visibility = VISIBLE khi có RTK, nên không thể ẩn bằng
+  visibility. Thay vào đó ép nó kích thước 0x0 (vẫn giữ id để findViewById không lỗi)
+  -> nó không vẽ gì, hàng icon vệ tinh chiếm toàn bộ chỗ.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_view"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center|left"
+        android:orientation="vertical"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:background="@color/uxsdk_black_95_percent">
+
+        <!-- Icon RTK bị vô hiệu (0x0) để không hiển thị -->
+        <ImageView
+            android:id="@+id/iv_rtk_icon"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:src="@drawable/uxsdk_ic_fpv_topbar_rtk_normal"
+            android:visibility="gone"
+            tools:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center|left"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/iv_satellite_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:src="@drawable/uxsdk_ic_fpv_topbar_satellite_normal" />
+
+            <!-- minWidth để chỗ cho 2 chữ số (vd 12 vệ tinh) ngay từ lần đo đầu,
+                 nếu không thì panel chốt bề rộng theo "0" và chữ số thứ 2 bị cắt.
+                 includeFontPadding=false + maxLines=1 tránh cắt đáy chữ số. -->
+            <TextView
+                android:id="@+id/tv_satellite_count"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="@dimen/uxsdk_2_dp"
+                android:fontFamily="sans-serif-condensed"
+                android:gravity="center_vertical|start"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:minWidth="22dp"
+                android:text="0"
+                android:textColor="@color/uxsdk_white"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

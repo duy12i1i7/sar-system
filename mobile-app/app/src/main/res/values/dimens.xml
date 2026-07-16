@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Override dimen của UX SDK.
+      Mặc định top bar chỉ cao 10% màn hình (~108px ở 1080p) -> chữ bị cắt mất phần đáy
+      (số vệ tinh, % pin, HD...). Tăng lên để chữ hiển thị đủ.
+    -->
+    <dimen name="uxsdk_top_bar_percent_height">0.13</dimen>
+</resources>
