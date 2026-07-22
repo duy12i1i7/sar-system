@@ -155,7 +155,6 @@
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
             <h1 style="margin-bottom: 0;">Drone Stream Manager</h1>
-            <button class="danger" onclick="shutdownPi()" style="padding: 0.5rem 1rem;">Tắt máy Pi</button>
         </div>
         
         <div class="card">
@@ -174,24 +173,6 @@
 
     <script>
         const hostIp = window.location.hostname;
-        
-        async function shutdownPi() {
-            if (!confirm("Bạn có chắc chắn muốn TẮT NGUỒN Raspberry Pi không? Hệ thống sẽ dừng hoạt động cho đến khi bạn rút điện cắm lại.")) {
-                return;
-            }
-            try {
-                const response = await fetch('/api/shutdown', { method: 'POST' });
-                if (response.ok) {
-                    const data = await response.json();
-                    alert(data.message);
-                    document.body.innerHTML = '<h2 style="text-align: center; margin-top: 5rem; color: #dc3545;">Raspberry Pi đang tắt nguồn... Bạn có thể đóng trang này.</h2>';
-                } else {
-                    alert('Không thể gọi lệnh tắt máy.');
-                }
-            } catch (error) {
-                alert('Có lỗi xảy ra khi gọi API tắt máy.');
-            }
-        }
 
         async function fetchStreams() {
             try {

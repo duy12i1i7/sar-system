@@ -55,15 +55,7 @@ def delete_stream(name):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/shutdown', methods=['POST'])
-def shutdown_pi():
-    try:
-        # Run shutdown command with sudo (password "1")
-        import subprocess
-        subprocess.run(["sudo", "-S", "shutdown", "-h", "now"], input=b"1\n", check=False)
-        return jsonify({"success": True, "message": "Đang tiến hành tắt máy..."})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# Route /api/shutdown da BI BO (07/2026): no tat CA MAY TRAM va nhet mat khau trong code.
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)

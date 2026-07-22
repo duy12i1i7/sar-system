@@ -23,7 +23,9 @@ import numpy as np
 import paho.mqtt.client as mqtt
 from ultralytics import YOLO
 
-PI_HOST = os.environ.get("PI_HOST", "10.10.10.2")
+# 07/2026: da bo Raspberry Pi. MediaMTX + MQTT chay CHUNG may voi detector nen mac dinh
+# la localhost -- doc RTSP qua loopback, khong con di qua wifi.
+PI_HOST = os.environ.get("PI_HOST", "127.0.0.1")
 MODEL = os.environ.get("YOLO_MODEL", "yolo26s.pt")           # model NGUOI (COCO)
 FIRE_MODEL = os.environ.get("FIRE_MODEL", "")               # model LUA/KHOI (Fire/Smoke); rong = tat
 STREAMS = os.environ.get("STREAMS", "drone-1,drone-2,drone-3,gcs").split(",")
