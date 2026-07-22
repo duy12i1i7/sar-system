@@ -195,7 +195,13 @@ body {
 
 /* Radar Mockup */
 .radar-grid {
+  /* VUONG bat buoc: cac vong tron dung width/height theo % cua khung, khung det la
+     vong tron thanh ELIP (va nem quet cung leo theo). Ep aspect-ratio 1 roi can giua,
+     nhu vay khung rong hep the nao radar cung dung hinh. */
   flex: 1;
+  aspect-ratio: 1 / 1;
+  width: auto;
+  align-self: center;
   position: relative;
   background: #05070a;
   border-radius: 8px;
@@ -359,8 +365,8 @@ body {
    Flex thi be rong tung phan la tuong minh, khong phai doan. */
 .dash2 .bottom { display: flex; gap: 14px; min-height: 0; }
 .dash2 .bottom > .panel { min-height: 0; min-width: 0; }
-.dash2 .bottom > .panel:nth-child(1) { flex: 1 1 0; }      /* radar: an phan con lai */
-.dash2 .bottom > .panel:nth-child(2) { flex: 0 0 360px; }  /* trang thai: co dinh, du cho chu */
+.dash2 .bottom > .panel:nth-child(1) { flex: 1 1 0; }       /* radar: an phan con lai */
+.dash2 .bottom > .panel:nth-child(2) { flex: 0 0 360px; }   /* trang thai: co dinh, du cho chu */
 .dash2 .bottom .alert-icon { width: 46px; height: 46px; border-radius: 12px; }
 .dash2 .bottom .alert-status { font-size: 1.15rem; }
 
@@ -440,3 +446,7 @@ body {
    thang rule `.dash2 .bottom .alert-status` (cung do dac hieu, cai sau an). */
 .dash2 .bottom .alert-row.r-accent .alert-status,
 .dash2 .bottom .alert-row.r-danger .alert-status { font-size: 1.3rem; letter-spacing: 0.6px; }
+
+/* Boc man live cua drone-2 de an/hien duoc ma KHONG unmount player (player con song thi
+   moi tu thu lai va tu biet luc drone-2 len song). */
+.feed2-wrap { flex: 1; flex-direction: column; min-height: 0; }
