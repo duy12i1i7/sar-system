@@ -836,12 +836,7 @@ paths:
     # keyframe lien tuc. Do duoc: 0 fps, PLI 5 lan/giay, mat goi 0 (mang khong he co loi).
     # Nen: giu luong goc cho AI (net hon, OpenCV giai ma High binh thuong), transcode rieng
     # mot nhanh "-web" dung chuan cho trinh duyet. NVENC nen gan nhu khong ton CPU.
-    runOnReady: >
-      ffmpeg -nostdin -hide_banner -loglevel warning
-      -i rtsp://127.0.0.1:8554/$MTX_PATH -an
-      -c:v h264_nvenc -preset p4 -tune ll -profile:v baseline -level 3.1
-      -vf scale=1280:720 -g 50 -b:v 3M -maxrate 3M -bufsize 6M
-      -f flv rtmp://127.0.0.1:1935/$MTX_PATH-web
+    runOnReady: /home/ubuntu/restream.sh $MTX_PATH
     runOnReadyRestart: yes
   drone-2:
     # DJI Fly ban H.264 **High profile, level 4.0, 1920x1088**, con WebRTC cua MediaMTX
@@ -850,12 +845,7 @@ paths:
     # keyframe lien tuc. Do duoc: 0 fps, PLI 5 lan/giay, mat goi 0 (mang khong he co loi).
     # Nen: giu luong goc cho AI (net hon, OpenCV giai ma High binh thuong), transcode rieng
     # mot nhanh "-web" dung chuan cho trinh duyet. NVENC nen gan nhu khong ton CPU.
-    runOnReady: >
-      ffmpeg -nostdin -hide_banner -loglevel warning
-      -i rtsp://127.0.0.1:8554/$MTX_PATH -an
-      -c:v h264_nvenc -preset p4 -tune ll -profile:v baseline -level 3.1
-      -vf scale=1280:720 -g 50 -b:v 3M -maxrate 3M -bufsize 6M
-      -f flv rtmp://127.0.0.1:1935/$MTX_PATH-web
+    runOnReady: /home/ubuntu/restream.sh $MTX_PATH
     runOnReadyRestart: yes
   drone-3:
     # DJI Fly ban H.264 **High profile, level 4.0, 1920x1088**, con WebRTC cua MediaMTX
@@ -864,12 +854,7 @@ paths:
     # keyframe lien tuc. Do duoc: 0 fps, PLI 5 lan/giay, mat goi 0 (mang khong he co loi).
     # Nen: giu luong goc cho AI (net hon, OpenCV giai ma High binh thuong), transcode rieng
     # mot nhanh "-web" dung chuan cho trinh duyet. NVENC nen gan nhu khong ton CPU.
-    runOnReady: >
-      ffmpeg -nostdin -hide_banner -loglevel warning
-      -i rtsp://127.0.0.1:8554/$MTX_PATH -an
-      -c:v h264_nvenc -preset p4 -tune ll -profile:v baseline -level 3.1
-      -vf scale=1280:720 -g 50 -b:v 3M -maxrate 3M -bufsize 6M
-      -f flv rtmp://127.0.0.1:1935/$MTX_PATH-web
+    runOnReady: /home/ubuntu/restream.sh $MTX_PATH
     runOnReadyRestart: yes
   gcs:
     # DJI Fly ban H.264 **High profile, level 4.0, 1920x1088**, con WebRTC cua MediaMTX
@@ -878,12 +863,7 @@ paths:
     # keyframe lien tuc. Do duoc: 0 fps, PLI 5 lan/giay, mat goi 0 (mang khong he co loi).
     # Nen: giu luong goc cho AI (net hon, OpenCV giai ma High binh thuong), transcode rieng
     # mot nhanh "-web" dung chuan cho trinh duyet. NVENC nen gan nhu khong ton CPU.
-    runOnReady: >
-      ffmpeg -nostdin -hide_banner -loglevel warning
-      -i rtsp://127.0.0.1:8554/$MTX_PATH -an
-      -c:v h264_nvenc -preset p4 -tune ll -profile:v baseline -level 3.1
-      -vf scale=1280:720 -g 50 -b:v 3M -maxrate 3M -bufsize 6M
-      -f flv rtmp://127.0.0.1:1935/$MTX_PATH-web
+    runOnReady: /home/ubuntu/restream.sh $MTX_PATH
     runOnReadyRestart: yes
 
   # Nhanh da transcode cho trinh duyet, do runOnReady o tren sinh ra.
