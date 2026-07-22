@@ -353,26 +353,39 @@ body {
 .dash2 { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 14px; height: 100%; padding: 14px; overflow: hidden; }
 .dash2 .videos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; min-width: 0; }
 .dash2 .videos > .panel { width: 100%; min-width: 0; }
-.dash2 .bottom { display: grid; grid-template-columns: minmax(0,1.1fr) repeat(3, minmax(0,1fr)); gap: 14px; min-height: 0; }
+/* FLEX chu khong grid: item video co `height:100%` + `aspect-ratio`, ma grid tinh kich thuoc
+   noi tai cua track `auto` lai phu thuoc VONG vao chieu cao hang -> `minmax(340px,...)` cua
+   cot ben canh bi bo qua, khung trang thai bi bop con ~150px va chu canh bao cut cut.
+   Flex thi be rong tung phan la tuong minh, khong phai doan. */
+.dash2 .bottom { display: flex; gap: 14px; min-height: 0; }
 .dash2 .bottom > .panel { min-height: 0; min-width: 0; }
+.dash2 .bottom > .panel:nth-child(1) { flex: 1 1 0; }      /* radar: an phan con lai */
+.dash2 .bottom > .panel:nth-child(2) { flex: 0 0 360px; }  /* trang thai: co dinh, du cho chu */
+.dash2 .bottom .alert-icon { width: 46px; height: 46px; border-radius: 12px; }
+.dash2 .bottom .alert-status { font-size: 1.15rem; }
+
+/* Khung video o HANG DUOI lam nguoc voi hang tren: cao bang chieu cao hang, be rong suy ra
+   tu ti le -> lap kin chieu cao, khong de thua khoang trong duoi day. */
+.vid-h { flex: 0 0 auto; height: 100%; width: auto; }
 
 /* contain: khong bao gio cat. opacity 1: mac dinh .video-container lam mo 0.8, khong hop
    voi anh cuu ho can nhin ro. */
-.dash2 .videos video, .dash2 .videos img { object-fit: contain; opacity: 1; }
+.vid-panel video, .vid-panel img { object-fit: contain; opacity: 1; }
 
 /* Hang duoi gio RONG (khong con la cot hep 360px nhu truoc) -> tra chu ve co binh thuong
    va dan deu theo chieu doc, neu khong noi dung dồn mot cuc con lai trong hoac. */
 .dash2 .bottom .panel-header { font-size: 0.76rem; margin-bottom: 6px; }
 .dash2 .bottom .telemetry-grid { flex: 1; align-content: space-evenly; gap: 10px 16px; margin-top: 6px; }
 .dash2 .bottom .stat-value { font-size: 1.25rem; }
-.dash2 .bottom .alert-body { justify-content: center; gap: 16px; }
-.dash2 .bottom .alert-icon { width: 56px; height: 56px; border-radius: 14px; }
-.dash2 .bottom .alert-status { font-size: 1.45rem; }
-.dash2 .bottom .alert-subtext { font-size: 0.85rem; }
 
-/* Ô cảnh báo — 4 biến thể: grey (chưa), accent (có người), safe (an toàn), danger (cháy) */
-.alert-card { justify-content: flex-start; }
-.alert-body { display: flex; align-items: center; gap: 12px; flex: 1; }
+/* Hai dong canh bao gio nam TRONG khung trang thai chung, duoi bang thong so. */
+.alert-rows { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--panel-border); }
+.alert-row { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 10px; border: 1px solid transparent; }
+.alert-row.r-grey, .alert-row.r-safe { background: rgba(255,255,255,0.035); }
+.alert-row.r-accent { border-color: rgba(0,240,255,0.4); background: rgba(0,240,255,0.07); }
+.alert-row.r-danger { border-color: #ff3b3b; background: rgba(255,59,59,0.10); animation: firepulse 0.9s ease-in-out infinite; }
+
+/* Bien the mau: grey (chua), accent (co nguoi), safe (an toan), danger (chay) */
 .alert-icon {
   flex: 0 0 auto; width: 44px; height: 44px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center; border: 1px solid var(--panel-border);
@@ -387,8 +400,6 @@ body {
 .alert-status.s-safe   { color: var(--success); }
 .alert-status.s-danger { color: var(--danger); }
 .alert-subtext { font-size: 0.76rem; color: var(--text-muted); margin-top: 3px; }
-.alert-card.v-accent { border-color: rgba(0,240,255,0.5); box-shadow: 0 0 16px rgba(0,240,255,0.18); }
-.alert-card.v-danger { border-color: #ff3b3b; background: rgba(255,59,59,0.10); animation: firepulse 0.9s ease-in-out infinite; }
 
 .dash2.alarm { animation: rootalarm 0.9s ease-in-out infinite; }
 @keyframes rootalarm { 0%,100% { box-shadow: inset 0 0 0 rgba(255,59,59,0); } 50% { box-shadow: inset 0 0 60px rgba(255,59,59,0.22); } }

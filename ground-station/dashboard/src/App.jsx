@@ -117,7 +117,9 @@ function WebRTCPlayer({ streamName, children, onStatus, onAspect }) {
 
   return (
     <div className="video-container">
-      <video ref={videoRef} autoPlay muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      {/* KHONG dat objectFit inline: de CSS `.vid-panel video { object-fit: contain }` lo,
+          neu khong inline se de len va cat hinh khi ti le lech du chi mot chut. */}
+      <video ref={videoRef} autoPlay muted playsInline style={{ width: '100%', height: '100%' }} />
       <div className="cam-overlay"></div>
       {children}
       {status !== 'live' && (
@@ -209,16 +211,14 @@ function DemoRadar({ det }) {
 }
 
 /** Ô cảnh báo nhỏ gọn. variant: grey (chưa) | accent (có người) | safe (an toàn) | danger (cháy). */
-function AlertCard({ header, headerIcon, bodyIcon, variant, statusText, subText }) {
+/** Một dòng cảnh báo gọn, dùng bên trong khung trạng thái chung (không còn là ô riêng). */
+function AlertRow({ bodyIcon, variant, statusText, subText }) {
   return (
-    <div className={`panel alert-card v-${variant}`}>
-      <div className="panel-header"><span>{headerIcon}{header}</span></div>
-      <div className="alert-body">
-        <div className={`alert-icon a-${variant}`}>{bodyIcon}</div>
-        <div>
-          <div className={`alert-status s-${variant}`}>{statusText}</div>
-          <div className="alert-subtext">{subText}</div>
-        </div>
+    <div className={`alert-row r-${variant}`}>
+      <div className={`alert-icon a-${variant}`}>{bodyIcon}</div>
+      <div>
+        <div className={`alert-status s-${variant}`}>{statusText}</div>
+        <div className="alert-subtext">{subText}</div>
       </div>
     </div>
   );
@@ -271,53 +271,67 @@ function App() {
     const v = clampAR(ar);
     setDetAR((p) => (Math.abs(p - v) < 0.005 ? p : v));
   }, []);
+  const [live2AR, setLive2AR] = useState(16 / 9);
+  const onLive2Aspect = useCallback((ar) => {
+    const v = clampAR(ar);
+    setLive2AR((p) => (Math.abs(p - v) < 0.005 ? p : v));
+  }, []);
 
   return (
     <div className={`dash2${fireNow ? ' alarm' : ''}`}>
       {/* HÀNG 1 — hai khung video. Khung mang ĐÚNG tỉ lệ của luồng (lấy động từ video/ảnh),
           nên contain lấp vừa khít: không cắt cụt, không méo, không thừa dải đen. */}
       <div className="videos">
-        <div className="panel" style={{ padding: 0, aspectRatio: liveAR }}>
+        <div className="panel vid-panel" style={{ padding: 0, aspectRatio: liveAR }}>
           <div className="panel-header" style={{ padding: '12px 12px 0', position: 'absolute', zIndex: 20 }}>LIVE FEED — DRONE 1</div>
           <WebRTCPlayer streamName={WEBRTC_PATH} onAspect={onLiveAspect}>
             <div className="crosshair"></div>
           </WebRTCPlayer>
         </div>
-        <div className="panel" style={{ padding: 0, aspectRatio: detAR }}>
+        <div className="panel vid-panel" style={{ padding: 0, aspectRatio: detAR }}>
           <div className="panel-header" style={{ padding: '12px 12px 0', position: 'absolute', zIndex: 20, color: 'var(--accent)' }}>PHÁT HIỆN AI — DRONE 1</div>
           <DetectFeed streamName={STREAM} det={det} onAspect={onDetAspect} />
         </div>
       </div>
 
-      {/* HÀNG 2 — radar + thông số drone + 2 ô cảnh báo */}
+      {/* HÀNG 2 — radar · khung trạng thái gộp (thông số + 2 cảnh báo) · live feed drone-2 */}
       <div className="bottom">
         <div className="panel" style={{ background: '#05070a' }}>
           <DemoRadar det={det} />
         </div>
-        <FakeDronePanel label="DRONE 1" streamName={STREAM} />
-        <AlertCard
-          header="NGƯỜI BỊ NẠN"
-          headerIcon={<Users size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />}
-          bodyIcon={<Users size={22} />}
-          variant={victim ? 'accent' : 'grey'}
-          statusText={victim ? 'CÓ NGƯỜI BỊ NẠN' : 'CHƯA PHÁT HIỆN'}
-          subText={victim ? 'Đã phát hiện người bị nạn' : 'Chưa thấy người bị nạn'}
-        />
-        <AlertCard
-          header="CẢNH BÁO CHÁY"
-          headerIcon={<Flame size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />}
-          bodyIcon={<Flame size={22} />}
-          variant={fire.ever ? 'danger' : 'safe'}
-          statusText={fire.ever ? `PHÁT HIỆN ${fire.flame ? 'ĐÁM CHÁY' : 'KHÓI'}` : 'AN TOÀN'}
-          subText={fire.ever ? `Độ tin cậy ${(fire.conf * 100).toFixed(0)}%` : 'Không phát hiện cháy/khói'}
-        />
+
+        <FakeDronePanel label="DRONE 1" streamName={STREAM}>
+          <div className="alert-rows">
+            <AlertRow
+              bodyIcon={<Users size={22} />}
+              variant={victim ? 'accent' : 'grey'}
+              statusText={victim ? 'CÓ NGƯỜI BỊ NẠN' : 'CHƯA PHÁT HIỆN'}
+              subText={victim ? 'Đã phát hiện người bị nạn' : 'Chưa thấy người bị nạn'}
+            />
+            <AlertRow
+              bodyIcon={<Flame size={22} />}
+              variant={fire.ever ? 'danger' : 'safe'}
+              statusText={fire.ever ? `PHÁT HIỆN ${fire.flame ? 'ĐÁM CHÁY' : 'KHÓI'}` : 'AN TOÀN'}
+              subText={fire.ever ? `Độ tin cậy ${(fire.conf * 100).toFixed(0)}%` : 'Không phát hiện cháy/khói'}
+            />
+          </div>
+        </FakeDronePanel>
+
+        {/* Khung live thứ hai, CỐ ĐỊNH drone-2. Cao bằng hàng, rộng theo tỉ lệ luồng
+            (ngược với hàng trên: trên rộng cố định -> cao suy ra). */}
+        <div className="panel vid-panel vid-h" style={{ padding: 0, aspectRatio: live2AR }}>
+          <div className="panel-header" style={{ padding: '12px 12px 0', position: 'absolute', zIndex: 20 }}>LIVE FEED — DRONE 2</div>
+          <WebRTCPlayer streamName="drone-2-web" onAspect={onLive2Aspect}>
+            <div className="crosshair"></div>
+          </WebRTCPlayer>
+        </div>
       </div>
     </div>
   );
 }
 
 /** DRONE 1 — telemetry FAKE (DJI Fly không gửi telemetry). */
-function FakeDronePanel({ label, streamName }) {
+function FakeDronePanel({ label, streamName, children }) {
   const [t, setT] = useState(0);
   useEffect(() => { const id = setInterval(() => setT((x) => x + 1), 1000); return () => clearInterval(id); }, []);
   const wob = (b, a, ph) => b + Math.sin((t + ph) / 3) * a;
@@ -331,12 +345,14 @@ function FakeDronePanel({ label, streamName }) {
       linkDown={Math.round(wob(94, 4, 2))}
       wifiPercent={Math.round(wob(88, 5, 6))}
       wifiRssi={Math.round(wob(-47, 4, 3))}
-    />
+    >
+      {children}
+    </DronePanel>
   );
 }
 
 /** Bảng thông số drone GỐC. */
-function DronePanel({ title, battery, alt, pitch, roll, warning = false, linkDown = null, wifiPercent = null, wifiRssi = null }) {
+function DronePanel({ title, battery, alt, pitch, roll, warning = false, linkDown = null, wifiPercent = null, wifiRssi = null, children }) {
   return (
     <div className="panel" style={{ borderColor: warning ? 'var(--warning)' : 'var(--panel-border)' }}>
       <div className="panel-header" style={{ color: warning ? 'var(--warning)' : 'var(--text-muted)' }}>
@@ -370,6 +386,7 @@ function DronePanel({ title, battery, alt, pitch, roll, warning = false, linkDow
           <div className="stat-value">{alt}</div>
         </div>
       </div>
+      {children}
     </div>
   );
 }
