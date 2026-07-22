@@ -9,6 +9,11 @@ const MEDIA_HOST = window.location.hostname;
 const WHEP_BASE = `http://${MEDIA_HOST}:8889`;
 const DETECT_BASE = `http://${window.location.hostname}:8091`;
 const STREAM = new URLSearchParams(window.location.search).get('stream') || 'drone-1';
+// Xem nhanh "-web" chu khong phai luong goc: DJI Fly ban H.264 High profile 1920x1088,
+// trong khi WebRTC quang cao SDP la Constrained Baseline 3.1 -> trinh duyet tu choi giai ma
+// (do duoc: 0 fps, PLI 5 lan/giay, mat goi 0). MediaMTX tu transcode sang nhanh "-web" dung
+// chuan (runOnReady trong mediamtx.yml). Luong goc van giu nguyen 1080p cho AI va MQTT.
+const WEBRTC_PATH = `${STREAM}-web`;
 const STALE_MS = 8000;
 
 const FOV_DEG = 78;                       // camera lắp phía TRƯỚC drone
@@ -237,7 +242,7 @@ function App() {
       <div className="main">
         <div className="panel" style={{ padding: 0 }}>
           <div className="panel-header" style={{ padding: '12px 12px 0', position: 'absolute', zIndex: 20 }}>LIVE FEED — DRONE 1</div>
-          <WebRTCPlayer streamName={STREAM}>
+          <WebRTCPlayer streamName={WEBRTC_PATH}>
             <div className="crosshair"></div>
           </WebRTCPlayer>
         </div>

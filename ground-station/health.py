@@ -72,10 +72,18 @@ def probe_mediamtx():
         return False, "khong bat tay duoc RTMP :1935"
     try:
         d = _http_json("http://127.0.0.1:9997/v3/paths/list")
-        names = [i["name"] for i in d.get("items", [])]
-        return True, f"{len(names)} path: {', '.join(names[:5])}"
+        items = d.get("items", [])
+        ready = {i["name"] for i in items if i.get("ready")}
     except Exception as e:
         return False, f"API :9997 loi: {e}"
+
+    # Luong goc dang phat thi nhanh "-web" (do runOnReady transcode) cung phai len.
+    # Neu khong, dashboard se den si ma khong ai bao -> coi nhu MediaMTX hong.
+    missing = [n for n in ready if not n.endswith("-web") and f"{n}-web" not in ready]
+    if missing:
+        return False, f"dang phat {', '.join(missing)} nhung thieu nhanh -web (transcode chet?)"
+    live = sorted(ready) or ["(khong co luong nao)"]
+    return True, f"{len(items)} path, dang phat: {', '.join(live[:4])}"
 
 
 def probe_mqtt():
