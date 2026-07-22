@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Battery, BatteryWarning, Wifi, Activity, Radio, Crosshair, Users, Flame } from 'lucide-react';
 import mqtt from 'mqtt';
 import './index.css';
@@ -27,10 +27,29 @@ const signalColor = (pct) => {
   return 'var(--danger, #ff3366)';
 };
 
+/**
+ * Tỉ lệ khung hình phải LẤY TỪ LUỒNG THẬT, không đoán 16:9: drone đổi chất lượng là đổi
+ * độ phân giải (đo thật: 1920x1088 -> 960x544). Khung cha mang đúng tỉ lệ này thì
+ * `object-fit: contain` lấp vừa khít — không cắt, không méo, không thừa dải đen.
+ * Kẹp trong [1.2, 2.4] để một luồng dị thường không kéo sập bố cục.
+ */
+const clampAR = (ar) => (Number.isFinite(ar) && ar > 0 ? Math.min(2.4, Math.max(1.2, ar)) : 16 / 9);
+
 /** WebRTC (WHEP) từ MediaMTX, tự nối lại khi phiên chết. */
-function WebRTCPlayer({ streamName, children, onStatus }) {
+function WebRTCPlayer({ streamName, children, onStatus, onAspect }) {
   const videoRef = useRef(null);
   const [status, setStatus] = useState('idle');
+
+  // `resize` bắn khi độ phân giải luồng đổi giữa chừng (đổi chất lượng trên DJI Fly).
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !onAspect) return;
+    const report = () => { if (v.videoWidth && v.videoHeight) onAspect(v.videoWidth / v.videoHeight); };
+    v.addEventListener('loadedmetadata', report);
+    v.addEventListener('resize', report);
+    report();
+    return () => { v.removeEventListener('loadedmetadata', report); v.removeEventListener('resize', report); };
+  }, [onAspect]);
   useEffect(() => { onStatus?.(status); }, [status, onStatus]);
   // Mất tín hiệu -> XOÁ khung cuối. Thẻ <video> vốn giữ frame cuối mãi mãi, nếu không
   // xoá thì LIVE treo ảnh cũ y hệt lỗi detector giữ frame cũ (đã sửa phía kia).
@@ -111,7 +130,7 @@ function WebRTCPlayer({ streamName, children, onStatus }) {
 }
 
 /** Màn PHÁT HIỆN AI: ảnh /snap đã vẽ bbox, lấp đầy ô + thanh nhãn (đồng bộ live). */
-function DetectFeed({ streamName, det }) {
+function DetectFeed({ streamName, det, onAspect }) {
   const [alive, setAlive] = useState(false);
   const [tick, setTick] = useState(0);
   const timer = useRef(null);
@@ -133,7 +152,11 @@ function DetectFeed({ streamName, det }) {
     <div style={{ position: 'absolute', inset: 0, background: '#000' }}>
       <img
         src={streamName ? `${DETECT_BASE}/snap/${streamName}?t=${tick}` : undefined}
-        onLoad={() => { setAlive(true); next(150); }}
+        onLoad={(e) => {
+          setAlive(true); next(150);
+          const im = e.currentTarget;
+          if (im.naturalWidth && im.naturalHeight) onAspect?.(im.naturalWidth / im.naturalHeight);
+        }}
         onError={() => { setAlive(false); next(1500); }}
         style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
         alt="detect"
@@ -236,24 +259,38 @@ function App() {
   // Quầng đỏ toàn màn: chỉ khi cháy ĐANG trong khung (để không nhấp nháy mãi, giữ LIVE/DETECT nổi bật).
   const fireNow = det && Date.now() - det.ts < STALE_MS && det.live !== false && (det.fire?.on || det.smoke?.on);
 
+  // Tỉ lệ khung của từng ô video, lấy từ chính luồng. useCallback để identity ổn định,
+  // không thì effect gắn listener trong WebRTCPlayer chạy lại mỗi lần render.
+  const [liveAR, setLiveAR] = useState(16 / 9);
+  const [detAR, setDetAR] = useState(16 / 9);
+  const onLiveAspect = useCallback((ar) => {
+    const v = clampAR(ar);
+    setLiveAR((p) => (Math.abs(p - v) < 0.005 ? p : v));
+  }, []);
+  const onDetAspect = useCallback((ar) => {
+    const v = clampAR(ar);
+    setDetAR((p) => (Math.abs(p - v) < 0.005 ? p : v));
+  }, []);
+
   return (
     <div className={`dash2${fireNow ? ' alarm' : ''}`}>
-      {/* CHÍNH: LIVE + DETECT lớn nhất */}
-      <div className="main">
-        <div className="panel" style={{ padding: 0 }}>
+      {/* HÀNG 1 — hai khung video. Khung mang ĐÚNG tỉ lệ của luồng (lấy động từ video/ảnh),
+          nên contain lấp vừa khít: không cắt cụt, không méo, không thừa dải đen. */}
+      <div className="videos">
+        <div className="panel" style={{ padding: 0, aspectRatio: liveAR }}>
           <div className="panel-header" style={{ padding: '12px 12px 0', position: 'absolute', zIndex: 20 }}>LIVE FEED — DRONE 1</div>
-          <WebRTCPlayer streamName={WEBRTC_PATH}>
+          <WebRTCPlayer streamName={WEBRTC_PATH} onAspect={onLiveAspect}>
             <div className="crosshair"></div>
           </WebRTCPlayer>
         </div>
-        <div className="panel" style={{ padding: 0 }}>
+        <div className="panel" style={{ padding: 0, aspectRatio: detAR }}>
           <div className="panel-header" style={{ padding: '12px 12px 0', position: 'absolute', zIndex: 20, color: 'var(--accent)' }}>PHÁT HIỆN AI — DRONE 1</div>
-          <DetectFeed streamName={STREAM} det={det} />
+          <DetectFeed streamName={STREAM} det={det} onAspect={onDetAspect} />
         </div>
       </div>
 
-      {/* PHẢI: radar vừa + thông số drone + 2 ô cảnh báo nhỏ */}
-      <div className="side">
+      {/* HÀNG 2 — radar + thông số drone + 2 ô cảnh báo */}
+      <div className="bottom">
         <div className="panel" style={{ background: '#05070a' }}>
           <DemoRadar det={det} />
         </div>

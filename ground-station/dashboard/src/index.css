@@ -346,17 +346,29 @@ body {
 
 @keyframes firepulse { 0%,100% { box-shadow: 0 0 0 rgba(255,59,59,0); } 50% { box-shadow: 0 0 24px rgba(255,59,59,0.6); } }
 
-/* ===== Demo 1 drone: LIVE + DETECT LỚN NHẤT, cột phải nhỏ ===== */
-.dash2 { display: grid; grid-template-columns: 1fr 360px; gap: 14px; height: 100%; padding: 14px; }
-.dash2 .main { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; min-width: 0; }
-.dash2 .side { display: grid; grid-template-rows: 1.35fr 1fr 0.72fr 0.72fr; gap: 14px; min-height: 0; }
-.dash2 .main > .panel, .dash2 .side > .panel { min-height: 0; min-width: 0; }
+/* ===== Demo 1 drone: 2 khung video hang tren, cac o con lai hang duoi =====
+   Hang 1 cao THEO TI LE VIDEO (aspect-ratio dat inline tu luong that), hang 2 an phan
+   con lai. Truoc day 2 khung video bi ep cao-hep (939x1052) trong khi video 16:9 ->
+   cover cat cut hai ben, contain thi thua dai den. Khung mang dung ti le thi het ca hai. */
+.dash2 { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 14px; height: 100%; padding: 14px; overflow: hidden; }
+.dash2 .videos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; min-width: 0; }
+.dash2 .videos > .panel { width: 100%; min-width: 0; }
+.dash2 .bottom { display: grid; grid-template-columns: minmax(0,1.1fr) repeat(3, minmax(0,1fr)); gap: 14px; min-height: 0; }
+.dash2 .bottom > .panel { min-height: 0; min-width: 0; }
 
-/* Cột phải: thu nhỏ chữ cho gọn, để LIVE/DETECT nổi bật */
-.dash2 .side .panel-header { font-size: 0.72rem; margin-bottom: 6px; }
-.dash2 .side .telemetry-grid { gap: 7px 12px; margin-top: 4px; }
-.dash2 .side .stat-label { font-size: 0.6rem; }
-.dash2 .side .stat-value { font-size: 0.95rem; gap: 5px; }
+/* contain: khong bao gio cat. opacity 1: mac dinh .video-container lam mo 0.8, khong hop
+   voi anh cuu ho can nhin ro. */
+.dash2 .videos video, .dash2 .videos img { object-fit: contain; opacity: 1; }
+
+/* Hang duoi gio RONG (khong con la cot hep 360px nhu truoc) -> tra chu ve co binh thuong
+   va dan deu theo chieu doc, neu khong noi dung dồn mot cuc con lai trong hoac. */
+.dash2 .bottom .panel-header { font-size: 0.76rem; margin-bottom: 6px; }
+.dash2 .bottom .telemetry-grid { flex: 1; align-content: space-evenly; gap: 10px 16px; margin-top: 6px; }
+.dash2 .bottom .stat-value { font-size: 1.25rem; }
+.dash2 .bottom .alert-body { justify-content: center; gap: 16px; }
+.dash2 .bottom .alert-icon { width: 56px; height: 56px; border-radius: 14px; }
+.dash2 .bottom .alert-status { font-size: 1.45rem; }
+.dash2 .bottom .alert-subtext { font-size: 0.85rem; }
 
 /* Ô cảnh báo — 4 biến thể: grey (chưa), accent (có người), safe (an toàn), danger (cháy) */
 .alert-card { justify-content: flex-start; }
