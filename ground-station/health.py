@@ -38,7 +38,9 @@ MAX_RESTARTS_PER_HOUR = int(os.environ.get("HEALTH_MAX_RESTARTS", "4"))
 DETECT_STALE_S = float(os.environ.get("HEALTH_DETECT_STALE", "25"))
 
 MQTT_HOST = "127.0.0.1"
-state_lock = threading.Lock()
+# RLock chu khong Lock: log_event() cung lay khoa nay, ma co cho goi log_event khi
+# dang giu khoa -> Lock thuong se tu khoa chinh minh (da dinh deadlock that mot lan).
+state_lock = threading.RLock()
 events: list = []          # nhat ky hanh dong, moi nhat truoc
 last_detect_ts = [0.0]     # thoi diem nhan ban tin drone/detect/# gan nhat
 
@@ -190,10 +192,13 @@ def check_once():
     now = time.time()
     for key, (ok, detail) in results.items():
         st = status[key]
+        # Goi systemctl NGOAI khoa: no la subprocess, giu khoa trong luc do se chan
+        # ca trang web (handler cung can khoa) va lam /api/health treo.
+        active = systemd_active(st["unit"])
         with state_lock:
             st["last_check"] = now
             st["detail"] = detail
-            st["active"] = systemd_active(st["unit"])
+            st["active"] = active
             st["restarts"] = [t for t in st["restarts"] if now - t < 3600]
             in_cooldown = now < st["cooldown_until"]
 
@@ -201,10 +206,11 @@ def check_once():
             with state_lock:
                 st["ok"] = True
                 st["last_ok"] = now
-                if st["fails"]:
-                    log_event("recovered", key, f"khoe lai sau {st['fails']} lan hong")
+                had_failed = st["fails"]
                 st["fails"] = 0
                 st["gave_up"] = False
+            if had_failed:
+                log_event("recovered", key, f"khoe lai sau {had_failed} lan hong")
             continue
 
         with state_lock:
@@ -241,7 +247,14 @@ def check_once():
 
 # ---------------------------------------------------------------- he thong
 
+_sys_cache = {"at": 0.0, "data": {}}
+
+
 def system_info():
+    # Cache 4s: trang tu refresh 5s/lan va nvidia-smi la subprocess, khong nen goi
+    # lai moi request (nhieu tab mo cung luc la thanh spam).
+    if time.time() - _sys_cache["at"] < 4:
+        return _sys_cache["data"]
     info = {}
     try:
         with open("/proc/uptime") as f:
@@ -266,6 +279,7 @@ def system_info():
             info["gpu"] = {"name": n, "temp": int(t), "util": int(u), "mem_used": int(mu), "mem_total": int(mt)}
     except Exception:
         pass
+    _sys_cache.update(at=time.time(), data=info)
     return info
 
 
