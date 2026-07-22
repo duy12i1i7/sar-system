@@ -381,9 +381,41 @@ body {
 /* Hai dong canh bao gio nam TRONG khung trang thai chung, duoi bang thong so. */
 .alert-rows { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--panel-border); }
 .alert-row { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 10px; border: 1px solid transparent; }
+/* Trang thai binh thuong de THAT PHANG. Tuong phan moi la thu gay chu y - neu o nao
+   cung sang thi mat sang nao cung nhu nhau va canh bao chim nghim. */
 .alert-row.r-grey, .alert-row.r-safe { background: rgba(255,255,255,0.035); }
-.alert-row.r-accent { border-color: rgba(0,240,255,0.4); background: rgba(0,240,255,0.07); }
-.alert-row.r-danger { border-color: #ff3b3b; background: rgba(255,59,59,0.10); animation: firepulse 0.9s ease-in-out infinite; }
+
+/* Canh bao: vien ro + nen dam + quang nhap nhay + den bao chop. Chay nhanh hon o o
+   chay vi no khan hon o o nguoi. */
+.alert-row.r-accent {
+  border-color: var(--accent); background: rgba(0,240,255,0.13);
+  animation: alertAccent 1.4s ease-in-out infinite;
+}
+.alert-row.r-danger {
+  border-color: var(--danger); background: rgba(255,51,102,0.17);
+  animation: alertDanger 0.7s ease-in-out infinite;
+}
+@keyframes alertAccent {
+  0%,100% { box-shadow: 0 0 0 rgba(0,240,255,0); }
+  50%     { box-shadow: 0 0 20px rgba(0,240,255,0.5), inset 0 0 18px rgba(0,240,255,0.12); }
+}
+@keyframes alertDanger {
+  0%,100% { box-shadow: 0 0 2px rgba(255,51,102,0.3); }
+  50%     { box-shadow: 0 0 28px rgba(255,51,102,0.8), inset 0 0 22px rgba(255,51,102,0.25); }
+}
+
+/* Den bao nhap nhay canh dong chu - mat bat chuyen dong nhanh hon bat mau. */
+.alert-row.r-accent .alert-status::after, .alert-row.r-danger .alert-status::after {
+  content: ''; display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+  margin-left: 10px; vertical-align: middle; animation: alertLed 0.7s steps(1, end) infinite;
+}
+.alert-row.r-accent .alert-status::after { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+.alert-row.r-danger .alert-status::after { background: var(--danger); box-shadow: 0 0 12px var(--danger); }
+@keyframes alertLed { 0%,49% { opacity: 1; } 50%,100% { opacity: 0.12; } }
+
+/* Icon cung tho nhe theo nhip */
+.alert-row.r-danger .alert-icon { animation: alertBeat 0.7s ease-in-out infinite; }
+@keyframes alertBeat { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
 /* Bien the mau: grey (chua), accent (co nguoi), safe (an toan), danger (chay) */
 .alert-icon {
@@ -403,3 +435,8 @@ body {
 
 .dash2.alarm { animation: rootalarm 0.9s ease-in-out infinite; }
 @keyframes rootalarm { 0%,100% { box-shadow: inset 0 0 0 rgba(255,59,59,0); } 50% { box-shadow: inset 0 0 60px rgba(255,59,59,0.22); } }
+
+/* Dang canh bao thi chu to va sang hon hai trang thai binh thuong. Dat cuoi file de
+   thang rule `.dash2 .bottom .alert-status` (cung do dac hieu, cai sau an). */
+.dash2 .bottom .alert-row.r-accent .alert-status,
+.dash2 .bottom .alert-row.r-danger .alert-status { font-size: 1.3rem; letter-spacing: 0.6px; }

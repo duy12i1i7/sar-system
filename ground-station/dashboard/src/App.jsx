@@ -241,20 +241,24 @@ function App() {
   const det = detections[STREAM];
 
   // Cảnh báo LATCH: một khi phát hiện thì GIỮ, KHÔNG quay lại trạng thái an toàn (SAR).
-  const [victim, setVictim] = useState(false);
-  const [fire, setFire] = useState({ ever: false, flame: false, smoke: false, conf: 0 });
+  // Ghi lai THOI DIEM phat hien dau tien. Do tin cay cua model khong noi len dieu gi
+  // cho nguoi dieu hanh (49% hay 82% thi van phai di kiem tra), con "phat hien luc may gio"
+  // thi dung duoc ngay de doi chieu voi duong bay.
+  const [victim, setVictim] = useState({ ever: false, at: 0 });
+  const [fire, setFire] = useState({ ever: false, flame: false, smoke: false, at: 0 });
   useEffect(() => {
     if (!det || Date.now() - det.ts >= STALE_MS || det.live === false) return;
-    if ((det.people || 0) > 0) setVictim(true);
+    if ((det.people || 0) > 0) setVictim((p) => (p.ever ? p : { ever: true, at: Date.now() }));
     if (det.fire?.on || det.smoke?.on) {
       setFire((p) => ({
         ever: true,
         flame: p.flame || !!det.fire?.on,
         smoke: p.smoke || !!det.smoke?.on,
-        conf: Math.max(p.conf, det.fire?.conf || 0, det.smoke?.conf || 0),
+        at: p.ever ? p.at : Date.now(),
       }));
     }
   }, [det]);
+  const hhmm = (t) => new Date(t).toLocaleTimeString('vi-VN');
 
   // Quầng đỏ toàn màn: chỉ khi cháy ĐANG trong khung (để không nhấp nháy mãi, giữ LIVE/DETECT nổi bật).
   const fireNow = det && Date.now() - det.ts < STALE_MS && det.live !== false && (det.fire?.on || det.smoke?.on);
@@ -304,15 +308,15 @@ function App() {
           <div className="alert-rows">
             <AlertRow
               bodyIcon={<Users size={22} />}
-              variant={victim ? 'accent' : 'grey'}
-              statusText={victim ? 'CÓ NGƯỜI BỊ NẠN' : 'CHƯA PHÁT HIỆN'}
-              subText={victim ? 'Đã phát hiện người bị nạn' : 'Chưa thấy người bị nạn'}
+              variant={victim.ever ? 'accent' : 'grey'}
+              statusText={victim.ever ? 'CÓ NGƯỜI BỊ NẠN' : 'CHƯA PHÁT HIỆN'}
+              subText={victim.ever ? `Phát hiện lúc ${hhmm(victim.at)}` : 'Chưa thấy người bị nạn'}
             />
             <AlertRow
               bodyIcon={<Flame size={22} />}
               variant={fire.ever ? 'danger' : 'safe'}
               statusText={fire.ever ? `PHÁT HIỆN ${fire.flame ? 'ĐÁM CHÁY' : 'KHÓI'}` : 'AN TOÀN'}
-              subText={fire.ever ? `Độ tin cậy ${(fire.conf * 100).toFixed(0)}%` : 'Không phát hiện cháy/khói'}
+              subText={fire.ever ? `Phát hiện lúc ${hhmm(fire.at)}` : 'Không phát hiện cháy/khói'}
             />
           </div>
         </FakeDronePanel>
