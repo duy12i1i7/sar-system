@@ -4,21 +4,25 @@ A three-part system for flying DJI drones with live video, telemetry and on-GPU 
 detection streamed to a ground station dashboard.
 
 ```
-   DJI Mini 3            Android phone            Raspberry Pi           Ubuntu station
-  ┌──────────┐  OcuSync ┌───────────┐   RTMP    ┌────────────┐  WebRTC  ┌──────────────┐
-  │  drone   │ ───────▶ │  RC + app │ ────────▶ │  MediaMTX  │ ───────▶ │  dashboard   │
-  │  camera  │          │           │           │            │          │              │
-  └──────────┘          │ telemetry │   MQTT    │  Mosquitto │   MQTT   │  + YOLO26    │
-                        └───────────┘ ────────▶ └────────────┘ ───────▶ │   (GPU)      │
-                                                                        └──────────────┘
-                                                     10.10.10.2            10.10.10.3
+   DJI Mini 3            Android phone           Ubuntu ground station (all-in-one)
+  ┌──────────┐  OcuSync ┌───────────┐   RTMP    ┌────────────────────────────────────────┐
+  │  drone   │ ───────▶ │  RC + app │ ────────▶ │  MediaMTX ──WebRTC──▶ React dashboard  │
+  │  camera  │          │           │           │      └────RTSP────▶ YOLO26 detector    │
+  └──────────┘          │ telemetry │   MQTT    │  Mosquitto ◀──MQTT── detector + app    │
+                        └───────────┘ ────────▶ └────────────────────────────────────────┘
+                                                                10.10.10.3
 ```
 
 | Component | Runs on | What it does |
 |---|---|---|
 | [`mobile-app/`](mobile-app) | Android phone on the RC | DJI Fly-style flight UI, publishes video over RTMP and telemetry over MQTT |
-| [`streaming-server/`](streaming-server) | Raspberry Pi | MediaMTX (RTMP→WebRTC/RTSP), Mosquitto broker, web stream manager |
+| [`streaming-server/`](streaming-server) | Ubuntu ground station | MediaMTX (RTMP→WebRTC/RTSP), Mosquitto broker, web stream manager |
 | [`ground-station/`](ground-station) | Ubuntu desktop w/ NVIDIA GPU | React dashboard (video, telemetry, radar) + YOLO26 detector |
+
+> **July 2026 — the Raspberry Pi was retired.** After two days in the field it proved
+> unreliable outdoors (heat/weather). MediaMTX, Mosquitto and the web manager were moved
+> onto the Ubuntu ground station (`10.10.10.3`, static DHCP lease). Everything now runs on
+> one machine, so the detector reads RTSP over `localhost` instead of crossing the WiFi.
 
 ---
 
@@ -29,7 +33,7 @@ Built on the **DJI Mobile SDK v5** and the UX SDK, restyled to look like DJI Fly
 **Features**
 - Full flight UI: FPV, top bar, telemetry, camera controls, gimbal pitch slider, map/radar toggle
 - Pilot + drone + home markers on the map, auto-fit so all three stay visible
-- `STREAM` button: scans the streams defined on the Pi and lets you pick one to publish to
+- `STREAM` button: scans the streams defined on the ground station and lets you pick one to publish to
 - Publishes telemetry to `drone/telemetry/<stream>` at 2 Hz: position, attitude, battery,
   real link quality (drone↔RC and RC↔station), and the pilot's GPS
 
@@ -72,7 +76,7 @@ You need your own **DJI SDK key** (bound to `applicationId`) and **Google Maps k
 
 ---
 
-## 2. Streaming server (Raspberry Pi)
+## 2. Streaming server (on the Ubuntu ground station)
 
 - **MediaMTX** — RTMP in (`:1935`), WebRTC out (`:8889`), RTSP out (`:8554`), API (`:9997`)
 - **Mosquitto** — MQTT (`:1883`), WebSocket for the browser (`:9001`)
@@ -155,8 +159,7 @@ on running inside the graphical session for `DISPLAY`.
 
 | Host | Address | Ports |
 |---|---|---|
-| Raspberry Pi | `10.10.10.2` | 1935 RTMP · 8554 RTSP · 8889 WebRTC · 9997 API · 1883/9001 MQTT · 8080 manager |
-| Ubuntu station | `10.10.10.3` | 5173 dashboard · 8091 detector |
+| Ubuntu station | `10.10.10.3` | 1935 RTMP · 8554 RTSP · 8889 WebRTC (+8189/udp ICE) · 9997 API · 1883/9001 MQTT · 8080 manager · 5173 dashboard · 8091 detector |
 | Access point | `10.10.10.10` | health-checked by the dashboard |
 | Android phone | DHCP | RTMP + MQTT client |
 
@@ -165,7 +168,7 @@ on running inside the graphical session for `DISPLAY`.
 | Topic | Payload |
 |---|---|
 | `drone/telemetry/<stream>` | `latitude, longitude, altitude, pitch, roll, yaw, battery, linkDown, linkUp, wifiRssi, wifiPercent, pilotLat, pilotLon, pilotAcc` |
-| `drone/detect/<stream>` | `count, labels{}, top, ts` |
+| `drone/detect/<stream>` | `live, people, fire{on,conf}, smoke{on,conf}, objects[{label,cx,by,conf}], ts` |
 
 ## Known limitations
 

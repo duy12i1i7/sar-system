@@ -23,7 +23,7 @@ class MainActivity : CustomLayoutActivity() {
 
     private lateinit var streamManager: StreamManager
     private var btnStartStream: Button? = null
-    /** Gửi telemetry lên MQTT của Pi, chỉ chạy khi đang stream. */
+    /** Gửi telemetry lên MQTT của trạm, chỉ chạy khi đang stream. */
     private var telemetryService: TelemetryService? = null
     /** Luồng đang phát, giữ lại để đổi quality rồi phát lại đúng luồng đó. */
     private var currentStreamName: String? = null
@@ -132,7 +132,7 @@ class MainActivity : CustomLayoutActivity() {
                     btnStartStream?.text = "STREAM"
                     Toast.makeText(
                         this,
-                        "Không kết nối được Pi ${PiStreamApi.PI_HOST}:8080",
+                        "Không kết nối được trạm ${PiStreamApi.STATION_HOST}:8080",
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -140,7 +140,7 @@ class MainActivity : CustomLayoutActivity() {
                     btnStartStream?.text = "STREAM"
                     Toast.makeText(
                         this,
-                        "Pi chưa có luồng nào. Vào http://${PiStreamApi.PI_HOST}:8080 để tạo.",
+                        "Trạm chưa có luồng nào. Vào http://${PiStreamApi.STATION_HOST}:8080 để tạo.",
                         Toast.LENGTH_LONG
                     ).show()
                 }

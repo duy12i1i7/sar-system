@@ -40,3 +40,4 @@ Thumbs.db
 *.safe
 *.keep
 *.pre*
+migration/

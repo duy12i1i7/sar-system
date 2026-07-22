@@ -1,0 +1,12 @@
+[Unit]
+Description=MediaMTX Web Manager
+After=network.target mediamtx.service
+
+[Service]
+WorkingDirectory=/home/ubuntu/mediamtx-web
+ExecStart=/usr/bin/python3 server.py
+Restart=always
+User=ubuntu
+
+[Install]
+WantedBy=multi-user.target

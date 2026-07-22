@@ -346,27 +346,37 @@ body {
 
 @keyframes firepulse { 0%,100% { box-shadow: 0 0 0 rgba(255,59,59,0); } 50% { box-shadow: 0 0 24px rgba(255,59,59,0.6); } }
 
-/* ===== Demo 1 drone: layout 2 hàng + ô cảnh báo đẹp ===== */
-.dash2 { display: grid; grid-template-rows: 1.5fr 1fr; gap: 16px; height: 100%; padding: 16px; }
-.dash2-row { display: grid; gap: 16px; min-height: 0; }
-.dash2-row.top { grid-template-columns: 1fr 1fr 1fr; }
-.dash2-row.bot { grid-template-columns: 1.15fr 1.15fr 1fr 1fr; }
+/* ===== Demo 1 drone: LIVE + DETECT LỚN NHẤT, cột phải nhỏ ===== */
+.dash2 { display: grid; grid-template-columns: 1fr 360px; gap: 14px; height: 100%; padding: 14px; }
+.dash2 .main { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; min-width: 0; }
+.dash2 .side { display: grid; grid-template-rows: 1.35fr 1fr 0.72fr 0.72fr; gap: 14px; min-height: 0; }
+.dash2 .main > .panel, .dash2 .side > .panel { min-height: 0; min-width: 0; }
 
+/* Cột phải: thu nhỏ chữ cho gọn, để LIVE/DETECT nổi bật */
+.dash2 .side .panel-header { font-size: 0.72rem; margin-bottom: 6px; }
+.dash2 .side .telemetry-grid { gap: 7px 12px; margin-top: 4px; }
+.dash2 .side .stat-label { font-size: 0.6rem; }
+.dash2 .side .stat-value { font-size: 0.95rem; gap: 5px; }
+
+/* Ô cảnh báo — 4 biến thể: grey (chưa), accent (có người), safe (an toàn), danger (cháy) */
 .alert-card { justify-content: flex-start; }
-.alert-body { display: flex; align-items: center; gap: 16px; flex: 1; }
+.alert-body { display: flex; align-items: center; gap: 12px; flex: 1; }
 .alert-icon {
-  flex: 0 0 auto; width: 62px; height: 62px; border-radius: 16px;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(0, 240, 255, 0.12); color: var(--accent);
-  border: 1px solid rgba(0, 240, 255, 0.35); box-shadow: 0 0 18px rgba(0, 240, 255, 0.25);
+  flex: 0 0 auto; width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; border: 1px solid var(--panel-border);
 }
-.alert-icon.safe { background: rgba(0,255,136,0.12); color: var(--success); border-color: rgba(0,255,136,0.35); box-shadow: 0 0 18px rgba(0,255,136,0.2); }
-.alert-icon.fire { background: rgba(255,51,102,0.14); color: var(--danger); border-color: rgba(255,51,102,0.4); box-shadow: 0 0 20px rgba(255,51,102,0.35); }
-.alert-bignum { font-family: var(--font-mono); font-size: 3.4rem; font-weight: 800; line-height: 1; color: var(--accent); text-shadow: 0 0 22px var(--accent-glow); }
-.alert-status { font-size: 1.5rem; font-weight: 800; letter-spacing: 0.5px; }
-.alert-status.safe { color: var(--success); }
-.alert-status.fire { color: var(--danger); }
-.alert-subtext { font-size: 0.82rem; color: var(--text-muted); margin-top: 6px; }
-.alert-card.fire-on { border-color: #ff3b3b; background: rgba(255,59,59,0.10); animation: firepulse 0.9s ease-in-out infinite; }
+.alert-icon.a-grey   { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+.alert-icon.a-accent { background: rgba(0,240,255,0.14); color: var(--accent); border-color: rgba(0,240,255,0.4); box-shadow: 0 0 16px rgba(0,240,255,0.3); }
+.alert-icon.a-safe   { background: rgba(0,255,136,0.12); color: var(--success); border-color: rgba(0,255,136,0.35); }
+.alert-icon.a-danger { background: rgba(255,51,102,0.16); color: var(--danger); border-color: rgba(255,51,102,0.45); box-shadow: 0 0 18px rgba(255,51,102,0.4); }
+.alert-status { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.4px; }
+.alert-status.s-grey   { color: var(--text-muted); }
+.alert-status.s-accent { color: var(--accent); }
+.alert-status.s-safe   { color: var(--success); }
+.alert-status.s-danger { color: var(--danger); }
+.alert-subtext { font-size: 0.76rem; color: var(--text-muted); margin-top: 3px; }
+.alert-card.v-accent { border-color: rgba(0,240,255,0.5); box-shadow: 0 0 16px rgba(0,240,255,0.18); }
+.alert-card.v-danger { border-color: #ff3b3b; background: rgba(255,59,59,0.10); animation: firepulse 0.9s ease-in-out infinite; }
+
 .dash2.alarm { animation: rootalarm 0.9s ease-in-out infinite; }
-@keyframes rootalarm { 0%,100% { box-shadow: inset 0 0 0 rgba(255,59,59,0); } 50% { box-shadow: inset 0 0 60px rgba(255,59,59,0.25); } }
+@keyframes rootalarm { 0%,100% { box-shadow: inset 0 0 0 rgba(255,59,59,0); } 50% { box-shadow: inset 0 0 60px rgba(255,59,59,0.22); } }

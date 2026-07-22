@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Battery, BatteryWarning, Wifi, Navigation, Cpu, Activity, Server, Radio, Crosshair, Users, Flame, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Battery, BatteryWarning, Wifi, Activity, Radio, Crosshair, Users, Flame } from 'lucide-react';
 import mqtt from 'mqtt';
 import './index.css';
 
-const PI_HOST = '10.10.10.2';
-const WHEP_BASE = `http://${PI_HOST}:8889`;
+// Đã BỎ Pi: MediaMTX + MQTT giờ chạy CHUNG máy với dashboard. Trỏ theo host đang phục vụ
+// trang (localhost khi mở ở trạm, IP LAN khi người khác xem) -> không hardcode IP, đổi IP vẫn chạy.
+const MEDIA_HOST = window.location.hostname;
+const WHEP_BASE = `http://${MEDIA_HOST}:8889`;
 const DETECT_BASE = `http://${window.location.hostname}:8091`;
 const STREAM = new URLSearchParams(window.location.search).get('stream') || 'drone-1';
 const STALE_MS = 8000;
@@ -178,54 +180,16 @@ function DemoRadar({ det }) {
   );
 }
 
-function SysRow({ icon, label, ok, text }) {
+/** Ô cảnh báo nhỏ gọn. variant: grey (chưa) | accent (có người) | safe (an toàn) | danger (cháy). */
+function AlertCard({ header, headerIcon, bodyIcon, variant, statusText, subText }) {
   return (
-    <div className="sys-item">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{icon} {label}</div>
-      <span className={ok ? 'badge ok' : 'badge'} style={ok ? undefined : { background: 'rgba(255,255,255,0.12)', color: 'var(--text-muted)' }}>{text}</span>
-    </div>
-  );
-}
-
-/** Ô cảnh báo (đẹp): số người cần cứu hộ / trạng thái cháy. */
-function AlertCard({ kind, det }) {
-  const fresh = det && Date.now() - det.ts < STALE_MS;
-  const live = fresh && det.live !== false;
-  if (kind === 'people') {
-    const n = live ? (det.people || 0) : 0;
-    return (
-      <div className="panel alert-card">
-        <div className="panel-header"><span><Users size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />NGƯỜI CẦN CỨU HỘ</span></div>
-        <div className="alert-body">
-          <div className="alert-icon"><Users size={30} /></div>
-          <div>
-            <div className="alert-bignum">{n}</div>
-            <div className="alert-subtext">{!fresh ? 'Chưa có dữ liệu' : det.live === false ? 'Mất tín hiệu nguồn' : `Đã nhận diện ${n} người cần cứu hộ`}</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  const on = live && (det.fire?.on || det.smoke?.on);
-  const conf = live ? Math.max(det.fire?.conf || 0, det.smoke?.conf || 0) : 0;
-  const smokeOnly = live && !det.fire?.on && det.smoke?.on;
-  return (
-    <div className={`panel alert-card${on ? ' fire-on' : ''}`}>
-      <div className="panel-header"><span><Flame size={14} style={{ verticalAlign: 'middle', marginRight: 6 }} />CẢNH BÁO CHÁY</span></div>
+    <div className={`panel alert-card v-${variant}`}>
+      <div className="panel-header"><span>{headerIcon}{header}</span></div>
       <div className="alert-body">
-        <div className={`alert-icon ${on ? 'fire' : 'safe'}`}><Flame size={30} /></div>
+        <div className={`alert-icon a-${variant}`}>{bodyIcon}</div>
         <div>
-          {on ? (
-            <>
-              <div className="alert-status fire">PHÁT HIỆN {smokeOnly ? 'KHÓI' : 'ĐÁM CHÁY'}</div>
-              <div className="alert-subtext" style={{ color: '#ffb3b3' }}>Độ tin cậy {(conf * 100).toFixed(0)}%</div>
-            </>
-          ) : (
-            <>
-              <div className="alert-status safe">AN TOÀN</div>
-              <div className="alert-subtext">{det?.live === false ? 'Mất tín hiệu nguồn' : 'Không phát hiện cháy/khói'}</div>
-            </>
-          )}
+          <div className={`alert-status s-${variant}`}>{statusText}</div>
+          <div className="alert-subtext">{subText}</div>
         </div>
       </div>
     </div>
@@ -233,27 +197,10 @@ function AlertCard({ kind, det }) {
 }
 
 function App() {
-  const [time, setTime] = useState(new Date().toLocaleTimeString());
   const [detections, setDetections] = useState({});
-  const [sys, setSys] = useState(null);
-  const [videoStatus, setVideoStatus] = useState({});
-  const onVideoStatus = useMemo(() => ({ feed1: (st) => setVideoStatus((p) => (p.feed1 === st ? p : { ...p, feed1: st })) }), []);
-
-  useEffect(() => { const t = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000); return () => clearInterval(t); }, []);
 
   useEffect(() => {
-    let alive = true;
-    const tick = async () => {
-      try { const r = await fetch(`${DETECT_BASE}/status`, { cache: 'no-store' }); const d = await r.json(); if (alive) setSys(d); }
-      catch { if (alive) setSys(null); }
-    };
-    tick();
-    const t = setInterval(tick, 5000);
-    return () => { alive = false; clearInterval(t); };
-  }, []);
-
-  useEffect(() => {
-    const client = mqtt.connect(`ws://${PI_HOST}:9001`);
+    const client = mqtt.connect(`ws://${MEDIA_HOST}:9001`);
     client.on('connect', () => client.subscribe('drone/detect/#'));
     client.on('message', (topic, message) => {
       const name = topic.split('/').pop();
@@ -264,21 +211,35 @@ function App() {
   }, []);
 
   const det = detections[STREAM];
-  const videoReady = videoStatus.feed1 === 'live' ? 1 : 0;
-  const fireOn = det && Date.now() - det.ts < STALE_MS && det.live !== false && (det.fire?.on || det.smoke?.on);
+
+  // Cảnh báo LATCH: một khi phát hiện thì GIỮ, KHÔNG quay lại trạng thái an toàn (SAR).
+  const [victim, setVictim] = useState(false);
+  const [fire, setFire] = useState({ ever: false, flame: false, smoke: false, conf: 0 });
+  useEffect(() => {
+    if (!det || Date.now() - det.ts >= STALE_MS || det.live === false) return;
+    if ((det.people || 0) > 0) setVictim(true);
+    if (det.fire?.on || det.smoke?.on) {
+      setFire((p) => ({
+        ever: true,
+        flame: p.flame || !!det.fire?.on,
+        smoke: p.smoke || !!det.smoke?.on,
+        conf: Math.max(p.conf, det.fire?.conf || 0, det.smoke?.conf || 0),
+      }));
+    }
+  }, [det]);
+
+  // Quầng đỏ toàn màn: chỉ khi cháy ĐANG trong khung (để không nhấp nháy mãi, giữ LIVE/DETECT nổi bật).
+  const fireNow = det && Date.now() - det.ts < STALE_MS && det.live !== false && (det.fire?.on || det.smoke?.on);
 
   return (
-    <div className={`dash2${fireOn ? ' alarm' : ''}`}>
-      {/* HÀNG 1: LIVE · RADAR · DETECT */}
-      <div className="dash2-row top">
+    <div className={`dash2${fireNow ? ' alarm' : ''}`}>
+      {/* CHÍNH: LIVE + DETECT lớn nhất */}
+      <div className="main">
         <div className="panel" style={{ padding: 0 }}>
           <div className="panel-header" style={{ padding: '12px 12px 0', position: 'absolute', zIndex: 20 }}>LIVE FEED — DRONE 1</div>
-          <WebRTCPlayer streamName={STREAM} onStatus={onVideoStatus.feed1}>
+          <WebRTCPlayer streamName={STREAM}>
             <div className="crosshair"></div>
           </WebRTCPlayer>
-        </div>
-        <div className="panel" style={{ padding: 0, background: '#05070a' }}>
-          <DemoRadar det={det} />
         </div>
         <div className="panel" style={{ padding: 0 }}>
           <div className="panel-header" style={{ padding: '12px 12px 0', position: 'absolute', zIndex: 20, color: 'var(--accent)' }}>PHÁT HIỆN AI — DRONE 1</div>
@@ -286,22 +247,28 @@ function App() {
         </div>
       </div>
 
-      {/* HÀNG 2: DRONE · SYSTEM · NGƯỜI · CHÁY */}
-      <div className="dash2-row bot">
-        <FakeDronePanel label="DRONE 1" streamName={STREAM} />
-        <div className="panel">
-          <div className="panel-header">SYSTEM STATUS <span style={{ color: 'var(--accent)' }}>{time}</span></div>
-          <div className="sys-list">
-            <SysRow icon={<Server size={14} color="var(--text-muted)" />} label="Internet" ok={!!sys?.internet} text={sys ? (sys.internet ? 'OK' : 'NO NET') : '- -'} />
-            <SysRow icon={<Radio size={14} color="var(--text-muted)" />} label="Access Point" ok={!!sys?.ap} text={sys ? (sys.ap ? 'OK' : 'OFFLINE') : '- -'} />
-            <SysRow icon={<Cpu size={14} color="var(--text-muted)" />} label="AI Available" ok={!!sys?.ai?.ok} text={!sys ? '- -' : sys.ai?.ok ? (sys.ai.device === 'cuda' ? 'GPU' : 'CPU') : 'NO'} />
-            <SysRow icon={<Flame size={14} color="var(--text-muted)" />} label="Nhận diện lửa" ok={!!sys?.ai?.fireModel} text={sys?.ai?.fireModel ? 'BẬT' : '- -'} />
-            <SysRow icon={<Activity size={14} color="var(--text-muted)" />} label="Video Ready" ok={videoReady > 0} text={`${videoReady}/1`} />
-            <SysRow icon={<Navigation size={14} color="var(--text-muted)" />} label="GPS" ok={!!sys?.gps} text={sys?.gps ? `${sys.gps.lat.toFixed(3)}, ${sys.gps.lon.toFixed(3)}` : '- -'} />
-          </div>
+      {/* PHẢI: radar vừa + thông số drone + 2 ô cảnh báo nhỏ */}
+      <div className="side">
+        <div className="panel" style={{ background: '#05070a' }}>
+          <DemoRadar det={det} />
         </div>
-        <AlertCard kind="people" det={det} />
-        <AlertCard kind="fire" det={det} />
+        <FakeDronePanel label="DRONE 1" streamName={STREAM} />
+        <AlertCard
+          header="NGƯỜI BỊ NẠN"
+          headerIcon={<Users size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />}
+          bodyIcon={<Users size={22} />}
+          variant={victim ? 'accent' : 'grey'}
+          statusText={victim ? 'CÓ NGƯỜI BỊ NẠN' : 'CHƯA PHÁT HIỆN'}
+          subText={victim ? 'Đã phát hiện người bị nạn' : 'Chưa thấy người bị nạn'}
+        />
+        <AlertCard
+          header="CẢNH BÁO CHÁY"
+          headerIcon={<Flame size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />}
+          bodyIcon={<Flame size={22} />}
+          variant={fire.ever ? 'danger' : 'safe'}
+          statusText={fire.ever ? `PHÁT HIỆN ${fire.flame ? 'ĐÁM CHÁY' : 'KHÓI'}` : 'AN TOÀN'}
+          subText={fire.ever ? `Độ tin cậy ${(fire.conf * 100).toFixed(0)}%` : 'Không phát hiện cháy/khói'}
+        />
       </div>
     </div>
   );

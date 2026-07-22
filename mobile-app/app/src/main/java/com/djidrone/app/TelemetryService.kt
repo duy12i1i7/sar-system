@@ -21,7 +21,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 import org.json.JSONObject
 
 /**
- * Âm thầm thu thập telemetry của drone rồi gửi lên MQTT của Pi.
+ * Âm thầm thu thập telemetry của drone rồi gửi lên MQTT của trạm mặt đất.
  *
  * Topic đặt theo tên luồng đang stream: `drone/telemetry/<streamName>`
  * (vd luồng "drone-1" -> topic "drone/telemetry/drone-1"), để dashboard
@@ -35,7 +35,8 @@ class TelemetryService(private val context: Context, private val streamName: Str
 
     companion object {
         private const val TAG = "Telemetry"
-        private const val BROKER = "tcp://10.10.10.2:1883"
+        // 22/07: bỏ Pi (10.10.10.2), broker chuyển sang máy Ubuntu của trạm.
+        private const val BROKER = "tcp://${PiStreamApi.STATION_HOST}:1883"
         /**
          * 2 Hz - mắt người không phân biệt được với 5 Hz trên bảng số liệu,
          * nhưng giảm rõ số lần re-render React ở dashboard.
