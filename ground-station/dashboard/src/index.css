@@ -195,13 +195,9 @@ body {
 
 /* Radar Mockup */
 .radar-grid {
-  /* VUONG bat buoc: cac vong tron dung width/height theo % cua khung, khung det la
-     vong tron thanh ELIP (va nem quet cung leo theo). Ep aspect-ratio 1 roi can giua,
-     nhu vay khung rong hep the nao radar cung dung hinh. */
+  /* LAP DAY khung (nhu ban goc). Vong tron van tron vi chinh KHUNG duoc ep vuong
+     (.radar-panel ben duoi) - ep vuong o day thay vi o khung thi se thua le hai ben. */
   flex: 1;
-  aspect-ratio: 1 / 1;
-  width: auto;
-  align-self: center;
   position: relative;
   background: #05070a;
   border-radius: 8px;
@@ -365,8 +361,10 @@ body {
    Flex thi be rong tung phan la tuong minh, khong phai doan. */
 .dash2 .bottom { display: flex; gap: 14px; min-height: 0; }
 .dash2 .bottom > .panel { min-height: 0; min-width: 0; }
-.dash2 .bottom > .panel:nth-child(1) { flex: 1 1 0; }       /* radar: an phan con lai */
-.dash2 .bottom > .panel:nth-child(2) { flex: 0 0 360px; }   /* trang thai: co dinh, du cho chu */
+/* Khung radar VUONG: cao bang hang, rong suy ra -> radar lap day khung ma vong tron
+   van tron. Khung trang thai an het phan con lai nen khong cho nao bi thua. */
+.radar-panel { flex: 0 0 auto; height: 100%; width: auto; aspect-ratio: 1 / 1; }
+.dash2 .bottom > .panel:nth-child(2) { flex: 1 1 360px; }   /* trang thai: an phan con lai */
 .dash2 .bottom .alert-icon { width: 46px; height: 46px; border-radius: 12px; }
 .dash2 .bottom .alert-status { font-size: 1.15rem; }
 

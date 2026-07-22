@@ -305,7 +305,7 @@ function App() {
 
       {/* HÀNG 2 — radar · khung trạng thái gộp (thông số + 2 cảnh báo) · live feed drone-2 */}
       <div className="bottom">
-        <div className="panel" style={{ background: '#05070a' }}>
+        <div className="panel radar-panel" style={{ background: '#05070a' }}>
           <DemoRadar det={det} />
         </div>
 
@@ -330,7 +330,7 @@ function App() {
             thành màn live. Player KHÔNG unmount khi ẩn — nó phải tiếp tục tự thử lại thì
             mới biết lúc drone-2 lên sóng để tự chuyển. Khung mang tỉ lệ của thứ đang hiện:
             vuông cho radar (nếu để 16:9 thì vòng tròn radar bị bóp thành elip). */}
-        <div className="panel vid-panel vid-h" style={{ padding: showRadar2 ? 12 : 0, aspectRatio: live2AR }}>
+        <div className="panel vid-panel vid-h" style={{ padding: showRadar2 ? 12 : 0, aspectRatio: showRadar2 ? 1 : live2AR }}>
           <div className="feed2-wrap" style={{ display: showRadar2 ? 'none' : 'flex' }}>
             <div className="panel-header" style={{ padding: '12px 12px 0', position: 'absolute', zIndex: 20 }}>LIVE FEED — DRONE 2</div>
             <WebRTCPlayer streamName="drone-2-web" onAspect={onLive2Aspect} onStatus={onLive2Status}>
