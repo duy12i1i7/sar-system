@@ -1,0 +1,4 @@
+# Cho health-check restart DUNG 5 unit nay, khong can mat khau.
+# Co y liet ke tung lenh thay vi cap sudo rong: neu health.py co bi loi/chiem quyen
+# thi no cung chi restart duoc may dich vu nay, khong lam gi khac tren may.
+ubuntu ALL=(root) NOPASSWD: /usr/bin/systemctl restart mediamtx, /usr/bin/systemctl restart mediamtx-web, /usr/bin/systemctl restart mosquitto, /usr/bin/systemctl restart drone-detector, /usr/bin/systemctl restart drone-dashboard

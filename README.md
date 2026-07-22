@@ -159,9 +159,32 @@ on running inside the graphical session for `DISPLAY`.
 
 | Host | Address | Ports |
 |---|---|---|
-| Ubuntu station | `10.10.10.3` | 1935 RTMP · 8554 RTSP · 8889 WebRTC (+8189/udp ICE) · 9997 API · 1883/9001 MQTT · 8080 manager · 5173 dashboard · 8091 detector |
+| Ubuntu station | `10.10.10.3` | 1935 RTMP · 8554 RTSP · 8889 WebRTC (+8189/udp ICE) · 9997 API · 1883/9001 MQTT · 8080 manager · 5173 dashboard · 8091 detector · **8095 health** |
 | Access point | `10.10.10.10` | health-checked by the dashboard |
 | Android phone | DHCP | RTMP + MQTT client |
+
+## Health-check and auto-restart
+
+`ground-station/health.py` (unit `sar-health`, page on **:8095**) probes every service every
+15s and restarts the ones that stop working.
+
+systemd's `Restart=always` only catches a process that *dies*. The failure that actually
+bites is a process still running but no longer serving — MediaMTX up but refusing RTMP, the
+detector stuck in its RTSP read loop and no longer publishing, the broker listening but not
+completing a handshake. systemd sees `active` throughout. So the probes exercise the real
+thing: a TCP handshake, an API call, and an MQTT round-trip (publish a nonce, wait for it to
+come back). The detector is additionally judged by whether `drone/detect/#` is still moving,
+since it publishes continuously even with no stream.
+
+To avoid making things worse than the fault it is fixing:
+
+- a service must fail **3 checks in a row** before anything is restarted (rides out blips),
+- after a restart there is a 120s cooldown before failures count again,
+- at most **4 restarts per hour** per service; past that it stops and flags the service as
+  needing a human, because restarting forever just hides the real fault.
+
+Restarts go through `sudo -n systemctl restart <unit>`, with `/etc/sudoers.d/sar-health`
+granting NOPASSWD for exactly those five commands and nothing else. No password in the code.
 
 ## MQTT topics
 

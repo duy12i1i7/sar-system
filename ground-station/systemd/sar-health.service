@@ -1,0 +1,14 @@
+[Unit]
+Description=SAR station health-check and auto-restart (status page :8095)
+After=network.target mosquitto.service mediamtx.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu
+ExecStart=/usr/bin/python3 /home/ubuntu/health.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

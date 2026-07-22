@@ -1,0 +1,18 @@
+[Unit]
+# Vite truoc day chay bang `nohup npm run dev` trong start_dashboard.sh (XDG autostart).
+# Kieu do khong ai dung day lai khi no chet -> dua ve systemd de co Restart=always,
+# va de health-check restart duoc bang cung mot lenh nhu cac dich vu khac.
+Description=Drone dashboard (Vite dev server)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/drone-dashboard
+Environment=PATH=/snap/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/snap/bin/npm run dev -- --host
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
